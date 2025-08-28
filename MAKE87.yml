@@ -11,6 +11,21 @@ interfaces:
         spec:
           make87_message: make87_messages.audio.frame_pcm_s16le.FramePcmS16le:3dq2tw
         encoding: proto
+        config:
+          type: object
+          properties:
+            handler:
+              type: object
+              properties:
+                handler_type:
+                  type: string
+                  enum: [ FIFO, RING ]
+                  default: RING
+                capacity:
+                  type: integer
+                  minimum: 0
+                  description: "Capacity of the handler. For FIFO, this is the maximum number of messages it can hold. For RING, this is the size of the ring buffer."
+                  default: 10
     publishers:
       - name: transcript_text
         spec:
