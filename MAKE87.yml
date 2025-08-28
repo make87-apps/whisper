@@ -9,29 +9,36 @@ interfaces:
     subscribers:
       - name: incoming_message
         spec:
-          make87_message: make87_messages.text.PlainText
+          make87_message: make87_messages.audio.frame_pcm_s16le.FramePcmS16le:3dq2tw
         encoding: proto
-        config:
-          type: object
-          properties:
-            handler:
-              type: object
-              properties:
-                handler_type:
-                  type: string
-                  enum: [ FIFO, RING ]
-                  default: RING
-                capacity:
-                  type: integer
-                  minimum: 0
-                  description: "Capacity of the handler. For FIFO, this is the maximum number of messages it can hold. For RING, this is the size of the ring buffer."
-                  default: 10
+    publishers:
+      - name: transcript_text
+        spec:
+          string: string
+        encoding: utf-8
 container_config:
   environment:
     RUST_LOG: info
 build:
-  build_kit:
-    name: rust
+  custom:
+    dockerfile: ./build_kit/Dockerfile
 dev_build:
   build_kit:
     name: rust
+    build_additions:
+      ide: vscode_server_rust
+config:
+  type: object
+  properties:
+    sr:
+      type: integer
+      description: The sample rate of the incoming audio in Hz.
+      default: 16000
+    gap_ms:
+      type: integer
+      description: The maximum gap of silence in ms to consider the end of a phrase.
+      default: 600
+    min_utter_ms:
+      type: integer
+      description: The minimum length of an utterance in ms.
+      default: 300
