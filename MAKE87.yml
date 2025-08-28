@@ -31,6 +31,31 @@ interfaces:
         spec:
           string: string
         encoding: utf-8
+        config:
+          type: object
+          properties:
+            congestion_control:
+              type: string
+              enum: [ DROP, BLOCK ]
+              default: DROP
+            priority:
+              type: string
+              enum:
+                - REAL_TIME
+                - INTERACTIVE_HIGH
+                - INTERACTIVE_LOW
+                - DATA_HIGH
+                - DATA
+                - DATA_LOW
+                - BACKGROUND
+              default: DATA
+            express:
+              type: boolean
+              default: true
+            reliability:
+              type: string
+              enum: [ BEST_EFFORT, RELIABLE ]
+              default: RELIABLE
 container_config:
   environment:
     RUST_LOG: info
