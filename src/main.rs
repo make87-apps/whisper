@@ -54,6 +54,15 @@ async fn main() -> Result<()> {
     let mut worker_state = state;
     let worker_pub_text = pub_text;
     let worker_params = params.clone();
+    let (pub_tx, mut pub_rx) = mpsc::channel::<String>(100);
+    tokio::spawn(async move {
+        while let Some(s) = pub_rx.recv().await {
+            if s.is_empty() || s == "[BLANK_AUDIO]" { continue; }
+            if let Err(e) = worker_pub_text.put(s.into_bytes()).await {
+                eprintln!("zenoh publish error: {e:?}");
+            }
+        }
+    });
 
     tokio::task::spawn_blocking(move || -> Result<()> {
         while let Some((mono_i16, in_sr)) = rx.blocking_recv() {
@@ -81,11 +90,7 @@ async fn main() -> Result<()> {
                 }
             }
             let out = out.trim();
-
-            if !out.is_empty() && out != "[BLANK_AUDIO]" {
-                println!("publishing {}", out);
-                let _ = worker_pub_text.put(out.as_bytes().to_vec());
-            }
+            let _ = pub_tx.try_send(out.to_string());
         }
         Ok(())
     });
