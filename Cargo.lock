@@ -146,6 +146,7 @@ dependencies = [
  "log",
  "make87",
  "make87_messages",
+ "num_cpus",
  "tokio",
  "whisper-rs",
 ]

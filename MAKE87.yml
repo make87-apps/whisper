@@ -77,8 +77,12 @@ config:
     gap_ms:
       type: integer
       description: The maximum gap of silence in ms to consider the end of a phrase.
-      default: 600
+      default: 200
     min_utter_ms:
       type: integer
       description: The minimum length of an utterance in ms.
       default: 300
+    max_utter_ms:
+      type: integer
+      description: The max length of an utterance in ms.
+      default: 5000
