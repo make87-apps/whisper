@@ -86,3 +86,7 @@ config:
       type: integer
       description: The max length of an utterance in ms.
       default: 5000
+    best_of:
+      type: integer
+      description: The number of transcription candidates to generate. Higher values may improve accuracy but will increase latency and resource usage.
+      default: 3

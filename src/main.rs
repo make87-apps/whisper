@@ -18,10 +18,20 @@ async fn main() -> Result<()> {
         .unwrap_or("/models/ggml-tiny.en.bin".into());
     let ctx = WhisperContext::new_with_params(&model, WhisperContextParameters::default())
         .with_context(|| format!("loading model {model}"))?;
-    let mut state = ctx.create_state().context("create whisper state")?;
+    let state = ctx.create_state().context("create whisper state")?;
+
+
+    // --- App config with low-latency defaults
+    let cfg = load_config_from_default_env().expect("load config");
+    let sr_fallback = cfg.config.get("sr").map(|v| v.as_u64().unwrap_or(16_000) as usize).unwrap_or(16_000);
+    let gap_ms      = cfg.config.get("gap_ms").map(|v| v.as_i64().unwrap_or(200)).unwrap_or(200);
+    let min_utter_ms= cfg.config.get("min_utter_ms").map(|v| v.as_i64().unwrap_or(250)).unwrap_or(250);
+    let max_utter_ms= cfg.config.get("max_utter_ms").and_then(|v| v.as_i64()).unwrap_or(5000);
+    let vad_rms_th  = cfg.config.get("vad_rms_th").map(|v| v.as_f64().unwrap_or(0.010) as f32).unwrap_or(0.010);
+    let best_of    = cfg.config.get("best_of").map(|v| v.as_u64().unwrap_or(1) as i32).unwrap_or(1);
 
     // Greedy for lowest latency
-    let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
+    let mut params = FullParams::new(SamplingStrategy::Greedy { best_of });
     // tiny.en is English-only; don't auto-detect
     params.set_detect_language(false);
     params.set_language(Some("en"));
@@ -32,13 +42,6 @@ async fn main() -> Result<()> {
     params.set_print_realtime(false);
     params.set_print_progress(false);
 
-    // --- App config with low-latency defaults
-    let cfg = load_config_from_default_env().expect("load config");
-    let sr_fallback = cfg.config.get("sr").map(|v| v.as_u64().unwrap_or(16_000) as usize).unwrap_or(16_000);
-    let gap_ms      = cfg.config.get("gap_ms").map(|v| v.as_i64().unwrap_or(200)).unwrap_or(200);
-    let min_utter_ms= cfg.config.get("min_utter_ms").map(|v| v.as_i64().unwrap_or(250)).unwrap_or(250);
-    let max_utter_ms= cfg.config.get("max_utter_ms").and_then(|v| v.as_i64()).unwrap_or(5000);
-    let vad_rms_th  = cfg.config.get("vad_rms_th").map(|v| v.as_f64().unwrap_or(0.010) as f32).unwrap_or(0.010);
 
     // --- Zenoh
     let zenoh = ZenohInterface::from_default_env("zenoh").expect("missing zenoh config");
