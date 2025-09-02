@@ -15,7 +15,7 @@ async fn main() -> Result<()> {
 
     // --- Whisper init
     let model = std::env::var("WHISPER_MODEL")
-        .unwrap_or("/app/models/ggml-tiny.en.bin".into());
+        .unwrap_or("/models/ggml-tiny.en.bin".into());
     let ctx = WhisperContext::new_with_params(&model, WhisperContextParameters::default())
         .with_context(|| format!("loading model {model}"))?;
     let mut state = ctx.create_state().context("create whisper state")?;
@@ -58,6 +58,7 @@ async fn main() -> Result<()> {
     tokio::spawn(async move {
         while let Some(s) = pub_rx.recv().await {
             if s.is_empty() || s == "[BLANK_AUDIO]" { continue; }
+            println!("Detected: {}", &s);
             if let Err(e) = worker_pub_text.put(s.into_bytes()).await {
                 eprintln!("zenoh publish error: {e:?}");
             }
@@ -90,7 +91,6 @@ async fn main() -> Result<()> {
                 }
             }
             let out = out.trim();
-            println!("Detected: {}", out);
             let _ = pub_tx.try_send(out.to_string());
         }
         Ok(())
