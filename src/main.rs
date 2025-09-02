@@ -90,6 +90,7 @@ async fn main() -> Result<()> {
                 }
             }
             let out = out.trim();
+            println!("Detected: {}", out);
             let _ = pub_tx.try_send(out.to_string());
         }
         Ok(())
